@@ -11,7 +11,7 @@ execute:
   echo: true
 ---
 
-[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be an \_\_.
+[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be a(n) ~~I want to preface that I am way too hard on myself and genuinely think I am failing so I'll leave it at that but know that is being too hard on myself so I don't know~~.
 
 [**Learning Objective Evidence:**]{.underline} In the code chunks below, provide code from Lab or Challenge assignments where you believe you have demonstrated proficiency with the specified learning target. Be sure to specify **where** the code came from (e.g., Lab 4 Question 2).
 
@@ -23,6 +23,9 @@ execute:
 
 ```{r}
 #| label: wd-1-csv
+#from lab 4
+
+childcare_costs <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-05-09/childcare_costs.csv')
 
 ```
 
@@ -30,13 +33,32 @@ execute:
 
 ```{r}
 #| label: wd-1-xlsx
-
+#from Check-in 2.3 
+agesxl <- read_xlsx
+          (
+            path = here::here
+                    ("check-ins", 
+                      "2.1-loading-data", 
+                      "Ages_Data", 
+                      "ages.xlsx"), 
+            sheet ="ages"
+          )
 ```
 
 -   `txt`
 
 ```{r}
 #| label: wd-1-txt
+#from Check-in 2.3 
+ages_mystery <- read_delim
+                (
+                  file = here::here
+                        ("Week 2", 
+                          "Check-ins", 
+                          "Ages_Data", 
+                          "ages_mystery.txt"), 
+                  delim = "|"
+                )
 
 ```
 
@@ -44,6 +66,24 @@ execute:
 
 ```{r}
 #| label: wd-2
+
+#from lab 4
+plot_childcare <- ca_childcare |>
+                 pivot_longer(
+                   cols = starts_with("mc_"), 
+                   names_to = "type", 
+                   values_to = "actual"
+                 ) |>
+                mutate(type = case_when(
+                                       type == "mc_infant" ~ "infant", 
+                                       type == "mc_toddler" ~ "toddler", 
+                                       type == "mc_preschool" ~ "preK"
+                                      )
+                      )|>
+                select(region, county_name, type, actual, study_year) |>
+                 right_join(intermediate, by = c("study_year", "region", "type"))
+
+plot_childcare
 
 ```
 
@@ -54,12 +94,26 @@ execute:
 ```{r}
 #| label: wd-3-numeric
 
+facebook_event_checkin |>
+      filter(event_name == "SQL Symphony Concert", str_starts(date, "201712")) |>
+      group_by(person_id) |>
+      summarize(checkIns = n()) |>
+      right_join(findingFemales, by = "person_id") |>
+      filter(checkIns == 3, if_all(everything(), ~ !is.na(.)))
+
 ```
 
 -   character -- specifically a string (example must use functions from **stringr**)
 
 ```{r}
 #| label: wd-3-string
+
+facebook_event_checkin |>
+      filter(event_name == "SQL Symphony Concert", str_starts(date, "201712")) |>
+      group_by(person_id) |>
+      summarize(checkIns = n()) |>
+      right_join(findingFemales, by = "person_id") |>
+      filter(checkIns == 3, if_all(everything(), ~ !is.na(.)))
 
 ```
 
@@ -84,12 +138,70 @@ execute:
 ```{r}
 #| label: wd-4-numeric
 
+#from lab 4
+ca_with_median <- ca_childcare |>
+                  group_by(region, study_year) |>
+                  mutate(median_income = median(mhi_2018, na.rm = TRUE),
+                         median_price = median(mc_infant, na.rm = TRUE))
+
 ```
 
 -   character -- specifically a string (example must use functions from **stringr**)
 
 ```{r}
 #| label: wd-4-string
+
+ca_childcare <- ca_childcare |> 
+  mutate(
+         county_name = str_remove(county_name, " County"), 
+         region = fct_collapse(county_name,
+                               "Superior California" = c(
+                                                         "Butte", "Colusa", "Del Norte",
+                                                         "Glenn", "Humboldt", "Mendocino", "Lake", 
+                                                         "Lassen", "Modoc", "Plumas", "Shasta", 
+                                                         "Sierra", "Siskiyou", "Tehama", "Trinity"
+                                                        ),
+                               "San Francisco Bay Area" = c(
+                                                            "Alameda", "Contra Costa",
+                                                            "Marin", "Napa", "San Francisco",
+                                                            "San Mateo", "Santa Clara",
+                                                            "Solano", "Sonoma"
+                                                            ),
+                               "Northern San Joaquin Valley" = c(
+                                                                 "San Joaquin", "Stanislaus",
+                                                                 "Merced"
+                                                                ),
+                               "Sacramento Area" = c(
+                                                     "El Dorado", "Placer", "Sacramento",
+                                                     "Sutter", "Yolo", "Yuba"
+                                                    ),
+                               "Central Coast" = c(
+                                                   "Monterey", "San Benito", "San Luis Obispo", 
+                                                   "Santa Barbara", "Santa Cruz", "Ventura"
+                                                  ),
+                               "Northern California & Central Sierra" = c(
+                                                                          "Alpine", "Amador",
+                                                                          "Calaveras",
+                                                                          "Inyo", "Mariposa",
+                                                                          "Mono", "Nevada",
+                                                                          "Tuolumne"
+                                                                         ),
+                               "Southern California" = c(
+                                                         "Los Angeles", "Orange", "Riverside", 
+                                                         "San Bernardino", "San Diego", "Imperial"
+                                                        ),
+                               "Central Valley" = c(
+                                                    "Fresno", "Kern", "Kings", 
+                                                    "Madera", "Tulare"
+                                                   ),
+                               "Inland Empire" = c(
+                                                   "Riverside", "San Bernardino"
+                                                  ),
+                               "San Diego Area" = c(
+                                                    "San Diego", "Imperial"
+                                                   )
+                              )
+         )
 
 ```
 
@@ -114,6 +226,12 @@ execute:
 ```{r}
 #| label: wd-5-left
 
+ca_childcare <- counties |>
+                filter(state_abbreviation == "CA", state_name == "California") |>
+                left_join(childcare_costs, by = "county_fips_code")
+
+ca_childcare
+
 ```
 
 -   `right_join()`
@@ -121,12 +239,21 @@ execute:
 ```{r}
 #| label: wd-5-right
 
+facebook_event_checkin |>
+      filter(event_name == "SQL Symphony Concert", str_starts(date, "201712")) |>
+      group_by(person_id) |>
+      summarize(checkIns = n()) |>
+      right_join(findingFemales, by = "person_id") |>
+      filter(checkIns == 3, if_all(everything(), ~ !is.na(.)))
+
 ```
 
 -   `inner_join()`
 
 ```{r}
 #| label: wd-5-inner
+
+
 
 ```
 
@@ -151,6 +278,7 @@ execute:
 ```{r}
 #| label: wd-6-anti
 
+#not yet used...
 ```
 
 **WD-7: I can pivot dataframes from long to wide and visa versa**
@@ -160,12 +288,39 @@ execute:
 ```{r}
 #| label: wd-7-long
 
+#revised lab 4, changed the need for 2 tables and condensed into 1. 
+plot_childcare <- ca_childcare |>
+  pivot_longer( 
+                cols = starts_with("mc_"),  
+                names_to = "type", 
+                values_to = "actual"
+              ) |>
+  mutate(
+          type = case_when(
+                            type == "mc_infant" ~ "infant", 
+                            type == "mc_toddler" ~ "toddler", 
+                            type == "mc_preschool" ~ "preK"
+                          )
+        )
+
 ```
 
 -   `pivot_wider()`
 
 ```{r}
 #| label: wd-7-wide
+
+#revised code from lab 4: changed filter to use %in% and changed to arrange() function at the end. 
+
+median_incomes <- ca_childcare |>
+                  filter(study_year %in% c(2008, 2018)) |>
+                  group_by(region, study_year) |>
+                  summarize(median_income = median(mhi_2018, na.rm = TRUE), .groups = "drop") |> 
+                  pivot_wider(names_from = study_year, 
+                              values_from = median_income, 
+                              names_prefix = "Median Income "
+                             ) |>
+                  arrange("Median Income 2018")
 
 ```
 
@@ -182,6 +337,33 @@ I've done this in the following provided assignments:
 ```{r}
 #| label: r-2-1
 
+palette <- c( "#1d3537", "#4c769d", "#a7cedc", 
+              "#8abd91", "#c4bc89", "#c99955", 
+              "#d7873e", "#db6243", "#d83a46"
+            )
+
+ggplot(data = surveys,
+       mapping = aes(
+                     x = species, 
+                     y = weight, 
+                     color = genus
+                    )
+       ) + 
+  geom_boxplot(outlier.alpha = 0) + 
+       geom_jitter(
+                   alpha = 0.15, 
+                   aes(color = genus)
+                  ) +
+       scale_color_manual(values = palette) +
+       labs(
+            x = "species name", 
+            y = "weight (g)", 
+            title = "distribution of weight in grams by species"
+           ) +
+       coord_flip() +
+       theme(axis.text.y = element_text(angle = 45)) + 
+       theme(axis.text.x = element_text(angle = 45)) 
+
 ```
 
 -   Example of **dplyr** pipeline
@@ -189,12 +371,26 @@ I've done this in the following provided assignments:
 ```{r}
 #| label: r-2-2
 
+#revised code from lab 4: changed filter to use %in% and changed to arrange() function at the end. 
+
+median_incomes <- ca_childcare |>
+                  filter(study_year %in% c(2008, 2018)) |>
+                  group_by(region, study_year) |>
+                  summarize(median_income = median(mhi_2018, na.rm = TRUE), .groups = "drop") |> 
+                  pivot_wider(names_from = study_year, 
+                              values_from = median_income, 
+                              names_prefix = "Median Income "
+                             ) |>
+                  arrange("Median Income 2018")
+
 ```
 
 -   Example of function formatting
 
 ```{r}
 #| label: r-2-3
+
+#not done yet
 
 ```
 
@@ -223,6 +419,19 @@ I've done this in the following provided assignments:
 ```{r}
 #| label: dvs-1-num
 
+ggplot(plot_childcare, aes(x = study_year, y = actual, color = region)) +
+      geom_point() +
+      geom_smooth(method = "loess") +
+      facet_wrap( ~ type) +
+      labs(
+           title = "Weekly Median Price for Center-Based Childcare ($)",
+           x = "Study Year",
+           y = "",
+           color = "California Region"
+      ) +
+      theme_bw() + 
+      theme(aspect.ratio = 1.2)
+
 ```
 
 -   at least one numeric variable and one categorical variable
@@ -230,12 +439,41 @@ I've done this in the following provided assignments:
 ```{r}
 #| label: dvs-2-num-cat
 
+palette <- c( "#1d3537", "#4c769d", "#a7cedc", 
+              "#8abd91", "#c4bc89", "#c99955", 
+              "#d7873e", "#db6243", "#d83a46"
+            )
+
+ggplot(data = surveys,
+       mapping = aes(
+                     x = species, 
+                     y = weight, 
+                     color = genus
+                    )
+       ) + 
+  geom_boxplot(outlier.alpha = 0) + 
+       geom_jitter(
+                   alpha = 0.15, 
+                   aes(color = genus)
+                  ) +
+       scale_color_manual(values = palette) +
+       labs(
+            x = "species name", 
+            y = "weight (g)", 
+            title = "distribution of weight in grams by species"
+           ) +
+       coord_flip() +
+       theme(axis.text.y = element_text(angle = 45)) + 
+       theme(axis.text.x = element_text(angle = 45)) 
+
 ```
 
 -   at least two categorical variables
 
 ```{r}
 #| label: dvs-2-cat
+
+
 
 ```
 
@@ -252,6 +490,33 @@ I've done this in the following provided assignments:
 
 ```{r}
 #| label: dvs-2-1
+
+palette <- c( "#1d3537", "#4c769d", "#a7cedc", 
+              "#8abd91", "#c4bc89", "#c99955", 
+              "#d7873e", "#db6243", "#d83a46"
+            )
+
+ggplot(data = surveys,
+       mapping = aes(
+                     x = species, 
+                     y = weight, 
+                     color = genus
+                    )
+       ) + 
+  geom_boxplot(outlier.alpha = 0) + 
+       geom_jitter(
+                   alpha = 0.15, 
+                   aes(color = genus)
+                  ) +
+       scale_color_manual(values = palette) +
+       labs(
+            x = "species name", 
+            y = "weight (g)", 
+            title = "distribution of weight in grams by species"
+           ) +
+       coord_flip() +
+       theme(axis.text.y = element_text(angle = 45)) + 
+       theme(axis.text.x = element_text(angle = 45)) 
 
 ```
 
@@ -276,6 +541,33 @@ I've done this in the following provided assignments:
 ```{r}
 #| label: dvs-3-1
 
+palette <- c( "#1d3537", "#4c769d", "#a7cedc", 
+              "#8abd91", "#c4bc89", "#c99955", 
+              "#d7873e", "#db6243", "#d83a46"
+            )
+
+ggplot(data = surveys,
+       mapping = aes(
+                     x = species, 
+                     y = weight, 
+                     color = genus
+                    )
+       ) + 
+  geom_boxplot(outlier.alpha = 0) + 
+       geom_jitter(
+                   alpha = 0.15, 
+                   aes(color = genus)
+                  ) +
+       scale_color_manual(values = palette) +
+       labs(
+            x = "species name", 
+            y = "weight (g)", 
+            title = "distribution of weight in grams by species"
+           ) +
+       coord_flip() +
+       theme(axis.text.y = element_text(angle = 45)) + 
+       theme(axis.text.x = element_text(angle = 45)) 
+
 ```
 
 -   I can use annotations
@@ -299,6 +591,18 @@ I've done this in the following provided assignments:
 ```{r}
 #| label: dvs-4-summarize
 
+#revised code from lab 4: changed filter to use %in% and changed to arrange() function at the end. 
+
+median_incomes <- ca_childcare |>
+                  filter(study_year %in% c(2008, 2018)) |>
+                  group_by(region, study_year) |>
+                  summarize(median_income = median(mhi_2018, na.rm = TRUE), .groups = "drop") |> 
+                  pivot_wider(names_from = study_year, 
+                              values_from = median_income, 
+                              names_prefix = "Median Income "
+                             ) |>
+                  arrange("Median Income 2018")
+
 ```
 
 -   Example using `across()`
@@ -315,12 +619,23 @@ I've done this in the following provided assignments:
 ```{r}
 #| label: dvs-5-1
 
+#from lab 4
+median_incomes <- ca_childcare |>
+                  filter(study_year %in% c(2008, 2018)) |>
+                  group_by(region, study_year) |>
+                  summarize(median_income = median(mhi_2018, na.rm = TRUE), .groups = "drop") |> 
+                  pivot_wider(names_from = study_year, 
+                              values_from = median_income, 
+                              names_prefix = "Median Income "
+                             ) |>
+                  arrange("Median Income 2018")
 ```
 
 -   Example 2
 
 ```{r}
 #| label: dvs-5-2
+#| 
 
 ```
 
@@ -434,6 +749,8 @@ I've done this in the following provided assignments:
 ```{r}
 #| label: pe-4-2
 
+
+
 ```
 
 ## Data Simulation & Statisical Models
@@ -461,6 +778,11 @@ I've done this in the following provided assignments:
 ```{r}
 #| label: dsm-2-1
 
+#lab 1
+#code for running the t-test with a 95% confidence level.
+#assuming unequal variance and two-sided alternative.
+t.test(len ~ supp, data = ToothGrowth, mu = 0, alternative = "two.sided", conf.level = 0.95, var.equal = FALSE)
+
 ```
 
 -   Example 2
@@ -468,11 +790,17 @@ I've done this in the following provided assignments:
 ```{r}
 #| label: dsm-2-2
 
+#lab 4
+reg_mod1 <- lm(median_price ~ median_income, data = ca_with_median)
+summary(reg_mod1)
+
 ```
 
 ## Revising My Thinking
 
 <!-- How did you revise your thinking throughout the course? How did you revise your thinking on the code examples you have provided in your portfolio? -->
+
+I have included comments in areas where revisions have been done, and am working on revisions for lab 4 and 5 which are not due until after this submission. 
 
 <!-- For the revisions included in your Portfolio, to help me understand the nature of your revisions, please denote somehow the feedback I provided you (e.g., boldface, italics, colored text) before your revisions. -->
 
@@ -480,8 +808,25 @@ I've done this in the following provided assignments:
 
 <!-- How did you extended your thinking throughout the course? How did you extend your thinking on the code examples you have provided in your portfolio? -->
 
+I have the two ggplot graphs where one was from challenge 2 in which I challenged myself to include the colors by species. I am still working on improving the lab 4 question 6 plot, but have challenged myself by implementing elements from the theme function and trying to learn more on what ggplot has to offer, such as changing the aspect ratio, and looking into the color brewer options. 
+
 ## Peer Support & Collaboration
 
 <!-- Include an image or a description of feedback you gave that you are proud of (either in a peer review or in Discord). -->
 
+Description of peer review from lab 5: 
+
+Praise regarding use of new content and continuing to implement old content as well as a praise for organization.
+
+Suggesting to improve code efficiency by combining two objects into one pipeline to minimize the number of objects in the environment. 
+
+Another suggestion regarding objects to improve code efficiency by removing unnecessary saving of pipelines as objects when the purpose of the pipeline is just to get one output and not use it in future code cells.
+
+A general note to cut down on unnecessary tags. 
+
+"Overall, your code is really clean and easy to read and follow your logic with how you indented and when you started a new line so I appreciated that!"
+
+
 <!-- Include a description of how you grew as a collaborator through the weekly pair programming activities.   -->
+
+Through the weekly pair programming activities, I find that I am hard to work with? I honestly don't really know how I've grown and might want your input on this. I feel like I've tried to put myself out there, but I'm not sure if it's actually how it should be done and feel like I'm being ignored to some extent but that's likely my fault. I have a lot of ideas, but it feels like my peers are not receptive of what I'm trying to say (starting by introducing themselves then immediately putting airpods in, turning to another person at another table for help, telling me not to ask you for help). I really should take more initiative in staying on task or holding each other accountable in that regard and will work on that moving forward. I am also aware that I am very self-critical so that is also something I will be working on by trying not to put myself down when working with others since that's not a person people want to work with. 
